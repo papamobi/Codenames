@@ -95,14 +95,10 @@ class balance(minqlx.Plugin):
         self.in_countdown = True
 
     def handle_round_start(self, *args, **kwargs):
-        # keep the same logic as in handle_round_countdown just in case
-        if all(self.suggested_agree):
-            # If we don't delay the switch a bit, the round countdown sound and
-            # text disappears for some weird reason.
-            @minqlx.next_frame
-            def f():
-                self.execute_suggestion()
-            f()
+        players = self.teams()
+        if all(self.suggested_agree) and len(players["red"]) == len(players["blue"]):
+            # don't wait because we don't have the countdown
+            self.execute_suggestion()
 
         self.in_countdown = False
 
