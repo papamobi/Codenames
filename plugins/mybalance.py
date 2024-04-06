@@ -774,16 +774,19 @@ class mybalance(iouonegirlPlugin):
 
             # this keeps track of whoever joined last to queue if needed and applies the grace period
             last_disconnect_time = self.grace_periods[p_id][0] if p_id in self.grace_periods else 0
-            if time.time() - last_disconnect_time > GRACE_PERIOD_TIME:
-                self.join_match_times[p_id] = time.time()
-                if last_disconnect_time != 0:
-                    minqlx.console_command("echo Player {} has last disconnect time {}: outside of grace period".format(p_id, last_disconnect_time))
-                minqlx.console_command("echo Player {} has joined the match at {}".format(p_id, self.join_match_times[p_id]))
-            else:
-                self.join_match_times[p_id] = self.grace_periods[p_id][1]
-                minqlx.console_command("echo Player {} has last disconnect time {}: inside of grace period, set join time {}".format(p_id, last_disconnect_time, self.grace_periods[p_id][1]))
+            # only set when someone joins from spec, if it's a swap (and there is an existing match time) do nothing
+            if p_id not in self.join_match_times:
+                if time.time() - last_disconnect_time > GRACE_PERIOD_TIME:
+                    self.join_match_times[p_id] = time.time()
+                    if last_disconnect_time != 0:
+                        minqlx.console_command("echo Player {} has last disconnect time {}: outside of grace period".format(p_id, last_disconnect_time))
+                    minqlx.console_command("echo Player {} has joined the match at {}".format(p_id, self.join_match_times[p_id]))
+                else:
+                    self.join_match_times[p_id] = self.grace_periods[p_id][1]
+                    minqlx.console_command("echo Player {} has last disconnect time {}: inside of grace period, set join time {}".format(p_id, last_disconnect_time, self.grace_periods[p_id][1]))
         else:
-            del self.join_match_times[p_id]
+            if p_id in self.join_match_times:
+                del self.join_match_times[p_id]
 
         # If the game mode has no rounds, and a player joins, set a timer
         if self.game_active and self.game.type_short in ["ctf", "tdm"]:
