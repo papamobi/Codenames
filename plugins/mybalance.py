@@ -755,7 +755,8 @@ class mybalance(iouonegirlPlugin):
                 return
             # this keeps track of whoever joined last to queue if needed
             # TODO: this probably needs some logic to allow players to reconnect
-            self.join_match_times[player.steam_id] = time.time()
+            if not player.steam_id in self.join_match_times:
+                self.join_match_times[player.steam_id] = time.time()
         else:
             del self.join_match_times[player.steam_id]
 
