@@ -628,7 +628,7 @@ class mybalance(iouonegirlPlugin):
         # cleanup outdated grace periods
         # do it here instead of game end to avoid unwanted race conditions
         current_time = time.time()
-        for player_id in self.grace_periods:
+        for player_id in list(self.grace_periods.keys()):
             if current_time - self.grace_periods[player_id][0] > GRACE_PERIOD_TIME:
                 del self.grace_periods[player_id]
 
