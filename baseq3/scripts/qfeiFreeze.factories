@@ -1,0 +1,32 @@
+{
+    "cvars": {
+      "g_startingWeapons": "65",
+      "g_railjump": "670",
+      "roundlimit": "15",
+      "roundtimelimit":"0",
+      "g_instagib": "1",
+      "g_dropCmds": "1",
+      "timelimit": "30",
+      "g_freezeThawTick": "1",
+      "g_freezeThawTime": "2000",
+      "g_freezeEnvironmentalRespawnDelay": "3000",
+      "g_freezeRoundDelay": "0",
+      "dmflags": "28",
+      "g_timeoutCount": "0",
+      "g_freezeProtectedSpawnTime": "1750",
+      "g_allowKill": "0",
+      "g_overtime": "0",
+      "pmove_BunnyHop": "0",
+      "pmove_CrouchStepJump": "0",
+      "pmove_JumpTimeDeltaMin": "50",
+      "pmove_WaterSwimScale": "0.5f",
+      "pmove_WaterWadeScale": "0.75f",
+	  "g_damage_rg": "100",
+	  "sv_AltEntDir": "ftspawns"
+    },
+    "author": "id Software",
+    "description": "Railgun and Gauntlet only. One shot, one kill.",
+    "basegt": "ft",
+    "id": "qfeift",
+    "title": "Codenames iFT"
+  }
