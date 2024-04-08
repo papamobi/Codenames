@@ -893,8 +893,8 @@ class mybalance(iouonegirlPlugin):
         player_count = len(teams["red"] + teams["blue"])
 
         # If it is the last player, don't do this and let the game finish normally
-        # OR if there is no match going on
-        if player_count == 1 or not self.game_active:
+        # OR if there is no match going on (countdown also counts as match)
+        if player_count == 1 or self.game.state == "warmup":
             return
 
         # Double check to not do anything you don't have to
