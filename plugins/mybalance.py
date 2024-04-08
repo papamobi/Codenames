@@ -115,6 +115,7 @@ EXT_SUPPORTED_GAMETYPES = ("ca", "ctf", "dom", "ft", "tdm", "duel", "ffa")
 RATING_KEY = "minqlx:players:{0}:ratings:{1}" # 0 == steam_id, 1 == short gametype.
 MAX_ATTEMPTS = 3
 CACHE_EXPIRE = 60*30 # 30 minutes TTL.
+GRACE_PERIOD_TIME = 120 # allows to reconnect and rejoin within 2 mins and keep match join time
 DEFAULT_RATING = 1500
 SUPPORTED_GAMETYPES = ("ca", "ctf", "dom", "ft", "tdm")
 
@@ -158,6 +159,9 @@ class mybalance(iouonegirlPlugin):
         self.jointimes = {}
         # used to calculate the last joiner
         self.join_match_times = {}
+        # grace periods that allow players to reconnect; steam_id : [last_disconnect_time, last_join_time]
+        # this is not gonna persist through server restarts but it's fine
+        self.grace_periods = {}
 
         self.game_active = self.game.state == "in_progress"
 
@@ -621,6 +625,13 @@ class mybalance(iouonegirlPlugin):
     @minqlx.delay(5)
     def handle_game_countdown(self):
 
+        # cleanup outdated grace periods
+        # do it here instead of game end to avoid unwanted race conditions
+        current_time = time.time()
+        for player_id in list(self.grace_periods.keys()):
+            if current_time - self.grace_periods[player_id][0] > GRACE_PERIOD_TIME:
+                del self.grace_periods[player_id]
+
         if self.game.type_short in ["ffa", "race"]: return
 
         # Make sure teams have even amount of players
@@ -630,7 +641,7 @@ class mybalance(iouonegirlPlugin):
         if not int(self.get_cvar("qlx_mybalance_autoshuffle")): return
 
         # Do the autoshuffle
-        self.center_print("*autoshuffle*")
+        #self.center_print("*autoshuffle*")
         self.msg("^7Autoshuffle...")
         self.shuffle()
 
@@ -726,6 +737,12 @@ class mybalance(iouonegirlPlugin):
         if player.steam_id in self.jointimes:
             del self.jointimes[player.steam_id]
 
+        # persist the join match time if it exists - in case the player
+        # unexpectedly disconnects
+        if player.steam_id in self.join_match_times:
+            self.grace_periods[player.steam_id] = [time.time(), self.join_match_times[player.steam_id]]
+            del self.join_match_times[player.steam_id]
+
         new_kickthreads = []
         for kt in self.kickthreads:
             if kt[0] != player.steam_id:
@@ -743,8 +760,9 @@ class mybalance(iouonegirlPlugin):
 
 
     def handle_team_switch(self, player, old, new):
+        p_id = player.steam_id
         if new in ['red', 'blue', 'free']:
-            if player.steam_id in self.kicked:
+            if p_id in self.kicked:
                 player.put("spectator")
                 if self.get_cvar("qlx_elo_kick") == "1":
                     kickmsg = "so you'll be kicked shortly..."
@@ -753,12 +771,22 @@ class mybalance(iouonegirlPlugin):
                 player.tell("^6You do not meet the skill rating requirements to play on this server, {}".format(kickmsg))
                 player.center_print("^6You do not meet the skill rating requirements to play on this server, {}".format(kickmsg))
                 return
-            # this keeps track of whoever joined last to queue if needed
-            # TODO: this probably needs some logic to allow players to reconnect
-            if not player.steam_id in self.join_match_times:
-                self.join_match_times[player.steam_id] = time.time()
+
+            # this keeps track of whoever joined last to queue if needed and applies the grace period
+            last_disconnect_time = self.grace_periods[p_id][0] if p_id in self.grace_periods else 0
+            # only set when someone joins from spec, if it's a swap (and there is an existing match time) do nothing
+            if p_id not in self.join_match_times:
+                if time.time() - last_disconnect_time > GRACE_PERIOD_TIME:
+                    self.join_match_times[p_id] = time.time()
+                    if last_disconnect_time != 0:
+                        minqlx.console_command("echo Player {} has last disconnect time {}: outside of grace period".format(p_id, last_disconnect_time))
+                    minqlx.console_command("echo Player {} has joined the match at {}".format(p_id, self.join_match_times[p_id]))
+                else:
+                    self.join_match_times[p_id] = self.grace_periods[p_id][1]
+                    minqlx.console_command("echo Player {} has last disconnect time {}: inside of grace period, set join time {}".format(p_id, last_disconnect_time, self.grace_periods[p_id][1]))
         else:
-            del self.join_match_times[player.steam_id]
+            if p_id in self.join_match_times:
+                del self.join_match_times[p_id]
 
         # If the game mode has no rounds, and a player joins, set a timer
         if self.game_active and self.game.type_short in ["ctf", "tdm"]:
