@@ -1,13 +1,11 @@
-# This is a plugin created by iouonegirl(@gmail.com)
-# Copyright (c) 2016 iouonegirl
-# https://github.com/dsverdlo/minqlx-plugins
+# Copyright (c) 2024 Codenames, cyku
 #
-# You are free to modify this plugin to your custom,
-# except for the version command related code.
+# https://github.com/papamobi/Codenames/
 #
-# Its purpose is to detect afk players and provide actions
-# to be taken on them. For now only working in team-based
-# gametypes.
+# AFK detection plugin for team based modes
+# detects afk players even if they did not move across rounds and deaths
+# and puts them to spec
+#
 #
 # Uses:
 # - qlx_afk_warning_seconds "10"
