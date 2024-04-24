@@ -645,14 +645,14 @@ class mybalance_new(iouonegirlPlugin):
         self.msg("^7Autoshuffle...")
         self.shuffle()
 
-        if 'balance' in minqlx.Plugin._loaded_plugins:
+        if 'balance_new' in minqlx.Plugin._loaded_plugins:
             self.msg("^7Balancing on skill ratings...")
-            b = minqlx.Plugin._loaded_plugins['balance']
+            b = minqlx.Plugin._loaded_plugins['balance_new']
             teams = self.teams()
             players = dict([(p.steam_id, self.game.type_short) for p in teams["red"] + teams["blue"]])
             b.add_request(players, b.callback_balance, minqlx.CHAT_CHANNEL)
         else:
-            self.msg("^7Couldn't balance on skill, make sure ^6balance^7 is loaded.")
+            self.msg("^7Couldn't balance on skill, make sure ^6balance_new^7 is loaded.")
 
 
 
