@@ -38,6 +38,7 @@ class balance(minqlx.Plugin):
     def __init__(self):
         self.add_hook("round_countdown", self.handle_round_countdown)
         self.add_hook("round_start", self.handle_round_start)
+        self.add_hook("round_end", self.handle_round_end)
         self.add_hook("vote_ended", self.handle_vote_ended)
         self.add_hook("player_disconnect", self.handle_player_disconnect)
         self.add_hook("new_game", self.handle_new_game)
@@ -95,12 +96,15 @@ class balance(minqlx.Plugin):
         self.in_countdown = True
 
     def handle_round_start(self, *args, **kwargs):
+        self.in_countdown = False
+
+    # do the swap here - seems like the round start event is delayed by ~4 seconds; doing this in round end
+    # should have the expected behaviour of immediately swapping people after round starts
+    def handle_round_end(self, *args, **kwargs):
         players = self.teams()
         if all(self.suggested_agree) and len(players["red"]) == len(players["blue"]):
             # don't wait because we don't have the countdown
             self.execute_suggestion()
-
-        self.in_countdown = False
 
     def handle_vote_ended(self, votes, vote, args, passed):
         if passed == True and vote == "shuffle" and self.get_cvar("qlx_balanceAuto", bool):
