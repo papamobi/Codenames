@@ -975,7 +975,10 @@ class mybalance(iouonegirlPlugin):
     # At the end of a round, prevent is reset back to false.
     # This gives us 10 seconds to prevent slaying before the
     # next round starts
-    def handle_round_end(self, data):
+    # balance here - seems like the round start event is delayed by ~4 seconds; doing this in round end
+    # should have the expected behaviour of immediately checking the balance and fixing uneven teams
+    def handle_round_end(self, round_number):
+        self.balance_before_start(round_number, True)
         self.prevent = False
 
     def handle_round_count(self, round_number):
@@ -1014,7 +1017,8 @@ class mybalance(iouonegirlPlugin):
     # but check it again to make sure the round starts even
     # this is actually useful for iFT because we have countdowns disabled
     def handle_round_start(self, round_number):
-        self.balance_before_start(round_number, True)
+        pass
+        #self.balance_before_start(round_number, True)
     # If there is no round delay, then round_count hasnt been called.
 ##        if self.game.type_short == "ft":
 ##            if not int(self.get_cvar('g_freezeRoundDelay')):
