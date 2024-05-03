@@ -1,5 +1,6 @@
 # Codenames
-![image](https://github.com/papamobi/Codenames/assets/78706032/bde569f4-a058-46ac-bdae-fb3bbca98b0e)
+![codenames](https://github.com/papamobi/Codenames/assets/78706032/167574bb-324f-4d42-83f9-268720d366f0)
+
 
 
 Configs and plugins for Codenames Instagib Freeze
