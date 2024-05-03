@@ -228,13 +228,13 @@ class queue(minqlx.Plugin):
             position = self.posInQueue(player)
 
             if position > -1:
-                addition = '«{}»'.format(position + 1)
+                addition = '⁑{}⁑'.format(position + 1)
             elif player in self._afk:
-                addition = '«{}»'.format(self.get_cvar("qlx_queueAFKTag"))
+                addition = '⁑{}⁑'.format(self.get_cvar("qlx_queueAFKTag"))
             elif self.game is not None and self.game.type_short not in TEAM_BASED_GAMETYPES + NONTEAM_BASED_GAMETYPES:
                 addition = ""
             elif player in self.teams()['spectator']:
-                addition = '«s»'
+                addition = '⁑s⁑'
 
             self._tags[player.steam_id] = addition
 
