@@ -1,5 +1,6 @@
 # Codenames
-![codenames](https://github.com/papamobi/Codenames/assets/78706032/167574bb-324f-4d42-83f9-268720d366f0)
+![codenames](https://github.com/papamobi/Codenames/assets/78706032/86857ba6-cc0c-4fee-9741-1a48b61c1b12)
+
 
 
 
