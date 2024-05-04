@@ -16,7 +16,7 @@ Direct console connect:
 /connect 79.132.130.101:27960
 
 Admin team:
-cyku
-frog
-coeurl
+cyku,
+frog,
+coeurl,
 mobi
