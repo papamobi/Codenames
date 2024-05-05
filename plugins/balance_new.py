@@ -183,8 +183,7 @@ class balance_new(minqlx.Plugin):
                     del players[steam_id]
 
             if not players:
-                self.handle_ratings_fetched(request_id, requests.codes.ok)
-                return
+                return self.handle_ratings_fetched(request_id, requests.codes.ok)
 
         attempts = 0
         last_status = 0
@@ -259,10 +258,9 @@ class balance_new(minqlx.Plugin):
             break
 
         if attempts == MAX_ATTEMPTS:
-            self.handle_ratings_fetched(request_id, last_status)
-            return
+            return self.handle_ratings_fetched(request_id, last_status)
 
-        self.handle_ratings_fetched(request_id, requests.codes.ok)
+        return self.handle_ratings_fetched(request_id, requests.codes.ok)
 
     @minqlx.next_frame
     def handle_ratings_fetched(self, request_id, status_code):
@@ -272,7 +270,7 @@ class balance_new(minqlx.Plugin):
             # TODO: Put a couple of known errors here for more detailed feedback.
             channel.reply("ERROR {}: Failed to fetch ratings.".format(status_code))
         else:
-            callback(players, channel, *args)
+            return callback(players, channel, *args)
 
     def add_request(self, players, callback, channel, *args):
         req = next(self.request_counter)
@@ -280,10 +278,10 @@ class balance_new(minqlx.Plugin):
 
         # Only start a new thread if we need to make an API request.
         if self.remove_cached(players):
-            self.fetch_ratings(players, req)
+            return self.fetch_ratings(players, req)
         else:
             # All players were cached, so we tell it to go ahead and call the callbacks.
-            self.handle_ratings_fetched(req, requests.codes.ok)
+            return self.handle_ratings_fetched(req, requests.codes.ok)
 
     def remove_cached(self, players):
         with self.ratings_lock:
@@ -657,18 +655,35 @@ class balance_new(minqlx.Plugin):
         self.suggested_pair = None
         self.suggested_agree = [False, False]
 
-    # helper functions for the queue plugin; possibly needs additional fetch_rating calls if ratings are not found?
+    # helper functions for the queue plugin
+    def callback_get_player_elo(self, players, channel):
+        sid = next(iter(players))
+        gt = self.game.type_short
+        return self.ratings[sid][gt]["elo"]
+
     def get_player_elo(self, player):
         try:
-            gt = self.game.type_short
-            return self.ratings[player.steam_id][gt]["elo"]
+            return self.add_request({ player.steam_id: self.game.type_short }, self.callback_get_player_elo, minqlx.CHAT_CHANNEL)
         except:
             minqlx.console_command("echo Couldn't fetch rating for player {} when adding to teams".format(player.steam_id))
             return -1
 
-    def get_team_averages(self):
-        gt = self.game.type_short
+    def callback_get_team_averages(self, players, channel):
         teams = self.teams()
+        current = teams["red"] + teams["blue"]
+        gt = self.game.type_short
+
+        for p in current:
+            if p.steam_id not in players:
+                d = dict([(p.steam_id, gt) for p in current])
+                return self.add_request(d, self.callback_get_team_averages, channel)
+
         avg_red = self.team_average(teams["red"], gt)
         avg_blue = self.team_average(teams["blue"], gt)
         return { "red": avg_red, "blue": avg_blue }
+
+    def get_team_averages(self):
+        teams = self.teams()
+        gt = self.game.type_short
+        players = dict([(p.steam_id, gt) for p in teams["red"] + teams["blue"]])
+        return self.add_request(players, self.callback_get_team_averages, minqlx.CHAT_CHANNEL)

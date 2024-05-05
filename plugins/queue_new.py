@@ -147,7 +147,7 @@ class queue_new(minqlx.Plugin):
                                 higher_player.put(lower_team)
                                 lower_player.put(higher_team)
                             except Exception as e:
-                                minqlx.console_command("echo Unable to move players to teams according to elo, reason: {}", e)
+                                minqlx.console_command("echo Unable to move players to teams according to elo, reason: {}".format(e))
                                 p1.put("red")
                                 p2.put("blue")
                         else:
