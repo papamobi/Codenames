@@ -40,6 +40,7 @@ class balance_new(minqlx.Plugin):
         self.add_hook("round_start", self.handle_round_start)
         self.add_hook("round_end", self.handle_round_end)
         self.add_hook("vote_ended", self.handle_vote_ended)
+        self.add_hook("player_connect", self.handle_player_connect)
         self.add_hook("player_disconnect", self.handle_player_disconnect)
         self.add_hook("new_game", self.handle_new_game)
         self.add_hook("team_switch", self.handle_team_switch)
@@ -123,16 +124,23 @@ class balance_new(minqlx.Plugin):
                 self.add_request(players, self.callback_balance, minqlx.CHAT_CHANNEL)
             f()
 
+    # load player elo on connect immediately
+    def handle_player_connect(self, player):
+        self.add_request({ player.steam_id: self.game.type_short }, self.callback_fetch_player_elo, minqlx.CHAT_CHANNEL)
+
     def handle_player_disconnect(self, player, reason):
         self.clean_player_data(player)
 
     def handle_new_game(self):
         self.cache_cvars()
+        gt = self.game.type_short
 
-        # reset ratings cache on start
+        # reset ratings cache on start AND load elos for all players
         if self.game.state == "warmup":
             with self.ratings_lock:
                 self.ratings = {}
+                players = dict([(p.steam_id, gt) for p in self.players()])
+                self.add_request(players, self.callback_fetch_player_elo, minqlx.CHAT_CHANNEL)
 
     # check balance for even teams after switches
     def handle_team_switch(self, player, old, new):
@@ -183,7 +191,8 @@ class balance_new(minqlx.Plugin):
                     del players[steam_id]
 
             if not players:
-                return self.handle_ratings_fetched(request_id, requests.codes.ok)
+                self.handle_ratings_fetched(request_id, requests.codes.ok)
+                return
 
         attempts = 0
         last_status = 0
@@ -258,9 +267,10 @@ class balance_new(minqlx.Plugin):
             break
 
         if attempts == MAX_ATTEMPTS:
-            return self.handle_ratings_fetched(request_id, last_status)
+            self.handle_ratings_fetched(request_id, last_status)
+            return
 
-        return self.handle_ratings_fetched(request_id, requests.codes.ok)
+        self.handle_ratings_fetched(request_id, requests.codes.ok)
 
     @minqlx.next_frame
     def handle_ratings_fetched(self, request_id, status_code):
@@ -270,7 +280,7 @@ class balance_new(minqlx.Plugin):
             # TODO: Put a couple of known errors here for more detailed feedback.
             channel.reply("ERROR {}: Failed to fetch ratings.".format(status_code))
         else:
-            return callback(players, channel, *args)
+            callback(players, channel, *args)
 
     def add_request(self, players, callback, channel, *args):
         req = next(self.request_counter)
@@ -278,10 +288,10 @@ class balance_new(minqlx.Plugin):
 
         # Only start a new thread if we need to make an API request.
         if self.remove_cached(players):
-            return self.fetch_ratings(players, req)
+            self.fetch_ratings(players, req)
         else:
             # All players were cached, so we tell it to go ahead and call the callbacks.
-            return self.handle_ratings_fetched(req, requests.codes.ok)
+            self.handle_ratings_fetched(req, requests.codes.ok)
 
     def remove_cached(self, players):
         with self.ratings_lock:
@@ -656,34 +666,42 @@ class balance_new(minqlx.Plugin):
         self.suggested_agree = [False, False]
 
     # helper functions for the queue plugin
-    def callback_get_player_elo(self, players, channel):
-        sid = next(iter(players))
-        gt = self.game.type_short
-        return self.ratings[sid][gt]["elo"]
+    # empty callback on purpose - used to fetch the player elo through sending it to add_request without printing
+    # anything in chat
+    def callback_fetch_player_elo(self, players, channel):
+        pass
 
-    def get_player_elo(self, player):
+    def get_player_elo(self, player, attempt=0):
         try:
-            return self.add_request({ player.steam_id: self.game.type_short }, self.callback_get_player_elo, minqlx.CHAT_CHANNEL)
+            return self.ratings[player.steam_id][self.game.type_short]["elo"]
         except:
+            # normally this shouldn't happen at all but if for whatever reason we couldn't fetch the elo we need to
+            # re-fetch it and return it after some wait again
+            if attempt > 4:
+                raise Exception("couldn't fetch rating for player {}".format(player.steam_id))
+
             minqlx.console_command("echo Couldn't fetch rating for player {} when adding to teams".format(player.steam_id))
-            return -1
+            self.add_request({ player.steam_id: self.game.type_short }, self.callback_fetch_player_elo, minqlx.CHAT_CHANNEL)
+            time.sleep(0.1)
+            return self.get_player_elo(player, attempt + 1)
 
-    def callback_get_team_averages(self, players, channel):
-        teams = self.teams()
-        current = teams["red"] + teams["blue"]
+    def get_team_averages(self, attempt=0):
         gt = self.game.type_short
+        try:
+            teams = self.teams()
+            avg_red = self.team_average(teams["red"], gt)
+            avg_blue = self.team_average(teams["blue"], gt)
+            return { "red": avg_red, "blue": avg_blue }
+        except:
+            # normally this shouldn't happen at all but if for whatever reason we couldn't fetch the elo of some player
+            # we need to re-fetch it and return it after some wait again
+            if attempt > 4:
+                raise Exception("couldn't calculate the average rating for teams")
 
-        for p in current:
-            if p.steam_id not in players:
-                d = dict([(p.steam_id, gt) for p in current])
-                return self.add_request(d, self.callback_get_team_averages, channel)
-
-        avg_red = self.team_average(teams["red"], gt)
-        avg_blue = self.team_average(teams["blue"], gt)
-        return { "red": avg_red, "blue": avg_blue }
-
-    def get_team_averages(self):
-        teams = self.teams()
-        gt = self.game.type_short
-        players = dict([(p.steam_id, gt) for p in teams["red"] + teams["blue"]])
-        return self.add_request(players, self.callback_get_team_averages, minqlx.CHAT_CHANNEL)
+            minqlx.console_command("echo Couldn't calculate the average rating for teams!")
+            teams = self.teams()
+            current = teams["red"] + teams["blue"]
+            d = dict([(p.steam_id, gt) for p in current])
+            self.add_request(d, self.callback_fetch_player_elo, minqlx.CHAT_CHANNEL)
+            time.sleep(0.1)
+            return self.get_team_averages(attempt + 1)

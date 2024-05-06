@@ -139,8 +139,6 @@ class queue_new(minqlx.Plugin):
                                 b = minqlx.Plugin._loaded_plugins['balance_new']
                                 p1_elo = b.get_player_elo(p1)
                                 p2_elo = b.get_player_elo(p2)
-                                if p1_elo == -1 or p2_elo == -1:
-                                    raise Exception("elo for one of the players not found")
                                 team_averages = b.get_team_averages()
                                 higher_player, lower_player = (p1, p2) if p1_elo > p2_elo else (p2, p1)
                                 higher_team, lower_team = ("red", "blue") if team_averages["red"] > team_averages["blue"] else ("blue", "red")
