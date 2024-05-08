@@ -873,8 +873,8 @@ class mybalance_new(iouonegirlPlugin):
 
         # Tries to add the spected player to the front of the queue
         def try_add_to_queue(p):
-            if 'queue' in minqlx.Plugin._loaded_plugins:
-                queue = minqlx.Plugin._loaded_plugins['queue']
+            if 'queue_new' in minqlx.Plugin._loaded_plugins:
+                queue = minqlx.Plugin._loaded_plugins['queue_new']
                 queue.addToQueue(p, 0)
                 return True
             else:

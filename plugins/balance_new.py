@@ -677,7 +677,7 @@ class balance_new(minqlx.Plugin):
         except:
             # normally this shouldn't happen at all but if for whatever reason we couldn't fetch the elo we need to
             # re-fetch it and return it after some wait again
-            if attempt > 4:
+            if attempt > 3:
                 raise Exception("couldn't fetch rating for player {}".format(player.steam_id))
 
             minqlx.console_command("echo Couldn't fetch rating for player {} when adding to teams".format(player.steam_id))
@@ -695,7 +695,7 @@ class balance_new(minqlx.Plugin):
         except:
             # normally this shouldn't happen at all but if for whatever reason we couldn't fetch the elo of some player
             # we need to re-fetch it and return it after some wait again
-            if attempt > 4:
+            if attempt > 3:
                 raise Exception("couldn't calculate the average rating for teams")
 
             minqlx.console_command("echo Couldn't calculate the average rating for teams!")

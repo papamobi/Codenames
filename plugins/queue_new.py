@@ -272,10 +272,6 @@ class queue_new(minqlx.Plugin):
 
     # Plugin Handles and Commands
     def handle_player_disconnect(self, player, reason):
-        # check if a player has reconnected already - edge case if someone gets 999 ping and reconnects while the 'old'
-        # connection is still active
-        if player in self.players():
-            return
         self.remAFK(player, False)
         self.remFromQueue(player, False)
         self.remTag(player)
