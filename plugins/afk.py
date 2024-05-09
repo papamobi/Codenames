@@ -124,6 +124,7 @@ class afk(minqlx.Plugin):
 
         self.add_hook("round_start", self.handle_round_start)
         self.add_hook("team_switch", self.handle_player_switch)
+        self.add_hook("player_disconnect", self.handle_player_disconnect)
         self.add_hook("unload", self.handle_unload)
         self.add_hook("new_game", self.handle_new_game)
 
@@ -149,6 +150,10 @@ class afk(minqlx.Plugin):
 
         if new in ["red", "blue"]:
             self.positions[player.steam_id] = Player(player)
+
+    def handle_player_disconnect(self, player):
+        if player.steam_id in self.positions:
+            del self.positions[player.steam_id]
 
     @minqlx.thread
     def afk_thread(self):

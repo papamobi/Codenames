@@ -7,6 +7,8 @@
 import minqlx
 
 VERSION = "v0.1"
+
+
 class kickstuck(minqlx.Plugin):
 
     def __init__(self):
@@ -14,6 +16,9 @@ class kickstuck(minqlx.Plugin):
         self.add_hook("player_connect", self.handle_player_connect)
 
     def handle_player_connect(self, player):
+        for p in self.players():
+            if p.steam_id == player.steam_id:
+                self.logger.info("Found player {} with the same SteamID as connecting player {}".format(p, player))
         for p in self.players():
             if p.steam_id == player.steam_id and p.id != player.id:
                 self.logger.info("Found player {} with the same SteamID as connecting player {}, going to kick".format(p, player))
