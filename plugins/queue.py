@@ -130,10 +130,27 @@ class queue(minqlx.Plugin):
                 spectators = self.teams()['spectator']
                 if self._queue[0] in spectators and self._queue[0].connection_state == 'active':
                     if self._queue[1] in spectators and self._queue[1].connection_state == 'active':
-                        # self.test_logger.warning("pop out {}".format(self._queue[0]))
-                        self._queue.pop(0).put("red")
-                        # self.test_logger.warning("pop out {}".format(self._queue[0]))
-                        self._queue.pop(0).put("blue")
+                        p1, p2 = self._queue.pop(0), self._queue.pop(0)
+                        # self.test_logger.warning("going to put {} and {} in teams".format(p1, p2))
+                        # try to put the player with lower elo into the team with higher average elo, fallback and put
+                        # first into red and second into blue if an error happens
+                        if 'balance' in minqlx.Plugin._loaded_plugins:
+                            try:
+                                b = minqlx.Plugin._loaded_plugins['balance']
+                                p1_elo = b.get_player_elo(p1)
+                                p2_elo = b.get_player_elo(p2)
+                                team_averages = b.get_team_averages()
+                                higher_player, lower_player = (p1, p2) if p1_elo > p2_elo else (p2, p1)
+                                higher_team, lower_team = ("red", "blue") if team_averages["red"] > team_averages["blue"] else ("blue", "red")
+                                higher_player.put(lower_team)
+                                lower_player.put(higher_team)
+                            except Exception as e:
+                                minqlx.console_command("echo Unable to move players to teams according to elo, reason: {}".format(e))
+                                p1.put("red")
+                                p2.put("blue")
+                        else:
+                            p1.put("red")
+                            p2.put("blue")
                     elif self._queue[1].connection_state not in ['connected', 'primed']:
                         self.remFromQueue(self._queue[1])
                 elif self._queue[0].connection_state not in ['connected', 'primed']:
@@ -261,6 +278,7 @@ class queue(minqlx.Plugin):
         self.pushFromQueue(0.5)
 
     def handle_player_loaded(self, player):
+        # possibly do remTag here as well - but kickstuck should kick the second account fast enough
         self.updTag(player)
 
     def handle_team_switch(self, player, old_team, new_team):
