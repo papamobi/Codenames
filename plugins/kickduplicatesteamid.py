@@ -9,7 +9,7 @@ import minqlx
 VERSION = "v0.1"
 
 
-class kickstuck(minqlx.Plugin):
+class kickduplicatesteamid(minqlx.Plugin):
 
     def __init__(self):
         super().__init__()
@@ -17,9 +17,6 @@ class kickstuck(minqlx.Plugin):
 
     def handle_player_connect(self, player):
         for p in self.players():
-            if p.steam_id == player.steam_id:
-                self.logger.info("Found player {} with the same SteamID as connecting player {}".format(p, player))
-        for p in self.players():
             if p.steam_id == player.steam_id and p.id != player.id:
                 self.logger.info("Found player {} with the same SteamID as connecting player {}, going to kick".format(p, player))
-                p.kick("A player with the same SteamID is connecting from a different client")
+                p.kick("was kicked - player is connecting from a different client")
