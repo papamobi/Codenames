@@ -642,11 +642,11 @@ class mybalance(iouonegirlPlugin):
 
         # Do the autoshuffle
         #self.center_print("*autoshuffle*")
-        self.msg("^7Autoshuffle...")
+        self.msg("^4Autoshuffle...")
         self.shuffle()
 
         if 'balance' in minqlx.Plugin._loaded_plugins:
-            self.msg("^7Balancing on skill ratings...")
+            self.msg("^4Balancing on skill ratings...")
             b = minqlx.Plugin._loaded_plugins['balance']
             teams = self.teams()
             players = dict([(p.steam_id, self.game.type_short) for p in teams["red"] + teams["blue"]])
