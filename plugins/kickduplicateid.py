@@ -9,7 +9,7 @@ import minqlx
 VERSION = "v0.1"
 
 
-class kickduplicatesteamid(minqlx.Plugin):
+class kickduplicateid(minqlx.Plugin):
 
     def __init__(self):
         super().__init__()
