@@ -278,7 +278,6 @@ class queue(minqlx.Plugin):
         self.pushFromQueue(0.5)
 
     def handle_player_loaded(self, player):
-        # possibly do remTag here as well - but kickstuck should kick the second account fast enough
         self.updTag(player)
 
     def handle_team_switch(self, player, old_team, new_team):
