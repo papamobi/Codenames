@@ -43,8 +43,8 @@ class info(minqlx.Plugin):
         self.add_command("admins", self.cmd_admins)
         self.add_command("info", self.cmd_info)
 
-    def cmd_admins(self, player):
+    def cmd_admins(self, player, msg, channel):
         player.tell(ADMINS)
 
-    def cmd_info(self, player):
+    def cmd_info(self, player, msg, channel):
         player.tell(INFO)
