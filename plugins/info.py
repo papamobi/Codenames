@@ -30,7 +30,7 @@ Frequently used commands:
 !q - display the queue
 !sounds - enable or disable custom sounds
 !getsounds - display a list of custom sounds
-!pummel - display pummel stats for you and everyone on the server
+!pummel and !airpummel - display pummel/air pummel stats for you and everyone on the server
 !clan <tag> - set your clan tag
 !name <name> - set your nickname (you can also override your steam name!)
 """
