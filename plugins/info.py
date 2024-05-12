@@ -8,31 +8,30 @@ import minqlx
 import minqlx.database
 
 
-# you can change those messages and add new commands in a similar fashion - just don't forget to add \n at the end
-# of each line!
+# you can change those messages and add new commands in a similar fashion
 ADMINS = """
-Admins list (contact through Discord for any questions):\n
-coeurl (.coeurl) - server owner\n
-mobi (f.mobile)\n
-:frog: (madhypnofrog)\n
+Admins list (contact through Discord for any questions):
+coeurl (.coeurl) - server owner
+mobi (f.mobile)
+:frog: (madhypnofrog)
 cyku (cyku)
 """
 
 INFO = """
-Frequently used commands:\n
-!info - display this message\n
-!teams - display team average elos and suggest a switch if necessary\n
-!a - agree to the switch\n
-!elos - display elos for all players\n
-!elo <id> - display the elo of a player\n
-!mappool - display all maps in the mappool\n
-!motd - display the message of the day\n
-!afk and !here - set your status while in spec\n
-!q - display the queue\n
-!sounds - enable or disable custom sounds\n
-!getsounds - display a list of custom sounds\n
-!pummel - display pummel stats for you and everyone on the server\n
-!clan <tag> - set your clan tag\n
+Frequently used commands:
+!info - display this message
+!teams - display team average elos and suggest a switch if necessary
+!a - agree to the switch
+!elos - display elos for all players
+!elo <id> - display the elo of a player
+!mappool - display all maps in the mappool
+!motd - display the message of the day
+!afk and !here - set your status while in spec
+!q - display the queue
+!sounds - enable or disable custom sounds
+!getsounds - display a list of custom sounds
+!pummel - display pummel stats for you and everyone on the server
+!clan <tag> - set your clan tag
 !name <name> - set your nickname (you can also override your steam name!)
 """
 
