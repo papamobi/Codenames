@@ -9,30 +9,29 @@ import minqlx.database
 
 
 # you can change those messages and add new commands in a similar fashion
-ADMINS = """
-Admins list (contact through Discord for any questions):
-coeurl (.coeurl) - server owner
-mobi (f.mobile)
-:frog: (madhypnofrog)
-cyku (cyku)
+ADMINS = """Admins list (contact through Discord for any questions. Use discord username in brackets below):
+^4coeurl^7 (.coeurl) - server owner
+^4mobi^7 (f.mobile)
+^4frog:^7 (madhypnofrog)
+^4cyku^7 (cyku)
 """
 
-INFO = """
-Frequently used commands:
-!info - display this message
-!teams - display team average elos and suggest a switch if necessary
-!a - agree to the switch
-!elos - display elos for all players
-!elo <id> - display the elo of a player
-!mappool - display all maps in the mappool
-!motd - display the message of the day
-!afk and !here - set your status while in spec
-!q - display the queue
-!sounds - enable or disable custom sounds
-!getsounds - display a list of custom sounds
-!pummel and !airpummel - display pummel/air pummel stats for you and everyone on the server
-!clan <tag> - set your clan tag
-!name <name> - set your nickname (you can also override your steam name!)
+INFO = """Frequently used commands:
+^6!info^7 - display this message
+^6!teams^7 - display team average elos and suggest a switch if necessary
+^6!a^7 - agree to the switch
+^6!elos^7 - display elos for all players
+^6!elo <id>^7 - display the elo of a player
+^6!mappool^7 - display all maps in the mappool
+^6!motd^7 - display the message of the day
+^6!afk^7 and ^6!here^7 - set your status while in spec
+^6!q^7 - display the queue
+^6!sounds^7 - enable or disable custom sounds
+^6!getsounds^7 - display a list of custom sounds
+^6!pummel^7 and ^6!airpummel^7 - display pummel/air pummel stats for you and everyone on the server
+^6!clan <tag>^7 - set your clan tag
+^6!name <name>^7 - set your nickname (you can also override your steam name!)
+^6!seen <STEAMID64>^7 - Check when the user was last seen on the server 
 """
 
 class info(minqlx.Plugin):
