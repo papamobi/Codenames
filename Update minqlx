@@ -1,4 +1,4 @@
-#Easy way to update/recompline minqlx
+#Easy way to update/recompile minqlx
 
 mkdir /tmp/minqlx/
 cd /tmp/minqlx/
