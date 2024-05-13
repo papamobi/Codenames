@@ -1,0 +1,12 @@
+#Easy way to update/recompline minqlx
+
+mkdir /tmp/minqlx/
+cd /tmp/minqlx/
+git clone https://github.com/MinoMino/minqlx.git /tmp/minqlx
+make
+cd /
+mv /tmp/minqlx/bin/minqlx.x64.so ~/steamcmd/steamapps/common/qlds/minqlx.x64.so
+mv /tmp/minqlx/bin/minqlx.zip ~/steamcmd/steamapps/common/qlds/minqlx.zip
+mv /tmp/minqlx/bin/run_server_x64_minqlx.sh ~/steamcmd/steamapps/common/qlds/run_server_x64_minqlx.sh
+mv /tmp/minqlx/bin/run_server_x86_minqlx.sh ~/steamcmd/steamapps/common/qlds/run_server_x86_minqlx.sh
+rm -r /tmp/minqlx/
