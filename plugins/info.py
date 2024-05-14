@@ -5,8 +5,6 @@
 # Displays info about the server.
 
 import minqlx
-import minqlx.database
-
 
 # you can change those messages and add new commands in a similar fashion
 ADMINS = """Admins list (contact through Discord for any questions. Use discord username in brackets below):
@@ -18,6 +16,7 @@ ADMINS = """Admins list (contact through Discord for any questions. Use discord 
 
 INFO = """Frequently used commands:
 ^6!info^7 - display this message
+^6!admins^7 - Show admin team list and their discord username for contact
 ^6!teams^7 - display team average elos and suggest a switch if necessary
 ^6!a^7 - agree to the switch
 ^6!elos^7 - display elos for all players
