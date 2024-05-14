@@ -19,4 +19,5 @@ class kickduplicateid(minqlx.Plugin):
         for p in self.players():
             if p.steam_id == player.steam_id and p.id != player.id:
                 self.logger.info("Found player {} with the same SteamID as connecting player {}, going to kick".format(p, player))
-                p.kick("was kicked - player is connecting from a different client")
+                # can't specify kick reason in clientkick - this can be fixed with minqlx source code patching but eh
+                minqlx.console_command("clientkick {}".format(p.id))

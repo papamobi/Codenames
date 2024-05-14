@@ -151,7 +151,7 @@ class afk(minqlx.Plugin):
         if new in ["red", "blue"]:
             self.positions[player.steam_id] = Player(player)
 
-    def handle_player_disconnect(self, player):
+    def handle_player_disconnect(self, player, reason):
         if player.steam_id in self.positions:
             del self.positions[player.steam_id]
 
