@@ -11,7 +11,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this plugin. If not, see <http://www.gnu.org/licenses/>.
-import traceback
 
 # This is a fun plugin written for Mino's Quake Live Server Mod minqlx.
 # It displays "Killer x:y Victim" message when Victim gets a monitored kill
@@ -59,6 +58,7 @@ import traceback
 import minqlx
 import re
 from time import sleep
+import traceback
 
 # DB related
 PLAYER_KEY = "minqlx:players:{}:kills"
