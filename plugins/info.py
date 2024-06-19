@@ -34,7 +34,8 @@ Frequently used commands:
 ^6!pummel^7 and ^6!airpummel^7 - display pummel/air pummel stats for you and everyone on the server
 ^6!clan <tag>^7 - set your clan tag
 ^6!name <name>^7 - set your nickname (you can also override your steam name!)
-^6!seen <STEAMID64>^7 - Check when the user was last seen on the server 
+^6!seen <STEAMID64>^7 - Check when the user was last seen on the server
+^6!flags^7 - List of fun custom flags. Use with /country <flag code> 
 """
 
 class info(minqlx.Plugin):
