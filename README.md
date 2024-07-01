@@ -11,7 +11,8 @@ We are using modified versions of the following plugins:
 balance.py,
 mybalance.py,
 afk.py,
-queue.py
+queue.py,
+essentials.py
 
 While you may use these plugins for other game modes, the modifications were made specifically for public IFT, so some functions are not guaranteed to work. Testing is recommended before use.
 
