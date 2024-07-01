@@ -21,8 +21,9 @@
       "pmove_JumpTimeDeltaMin": "50",
       "pmove_WaterSwimScale": "0.5f",
       "pmove_WaterWadeScale": "0.75f",
-	  "g_damage_rg": "100",
-	  "sv_AltEntDir": "ftspawns"
+	  "g_damage_g": "80",
+	  "sv_AltEntDir": "ftspawns",
+	  "teamsize": "8"
     },
     "author": "id Software",
     "description": "Railgun and Gauntlet only. One shot, one kill.",
