@@ -138,8 +138,7 @@ class essentials(minqlx.Plugin):
         if vote.lower() == "map" and self.mappool and self.get_cvar("qlx_enforceMappool", bool):
             split_args = args.split()
             if len(split_args) == 0:
-                caller.tell("Available maps and factories:")
-                self.tell_mappool(caller, indent=2)
+                self.tell_mappool(caller)
                 return minqlx.RET_STOP_ALL
             
             map_name = split_args[0].lower()
@@ -865,9 +864,25 @@ class essentials(minqlx.Plugin):
         
         return mappool
 
-    def tell_mappool(self, player, indent=0):
-        out = ""
-        for m in sorted(self.mappool.items(), key=lambda x: x[0]):
-            out += ("{0}{1:25} Factories: {2}\n"
-                .format(" " * indent, m[0], ", ".join(val for val in m[1])))
-        player.tell(out.rstrip("\n"))
+    def tell_mappool(self, player):
+        out = "Available maps:\n"
+        maps = sorted(list(map(lambda x: x[0], self.mappool.items())))
+        player.tell((out + self.format_list(maps, 3)).rstrip("\n"))
+
+    def format_list(self, l, n_columns):
+        m = len(l)
+        col_lens = [int((m + n_columns - 1 - i) / n_columns) for i in range(n_columns)]
+        cols = []
+        current = 0
+        for i in range(n_columns):
+            s = l[current:current + col_lens[i]]
+            max_width = max(map(lambda x: len(x), s)) + 1
+            cols.append(list(map(lambda x: x.ljust(max_width), s)))
+            current += col_lens[i]
+        res = ""
+        for i in range(m):
+            r, c = i % n_columns, int(i / n_columns)
+            res += cols[r][c]
+            if r == n_columns - 1:
+                res += "\n"
+        return res
