@@ -1,7 +1,7 @@
 {
     "cvars": {
       "g_startingWeapons": "65",
-      "g_railjump": "670",
+      "g_railjump": "660",
       "roundlimit": "15",
       "roundtimelimit":"0",
       "g_instagib": "1",
@@ -16,16 +16,12 @@
       "g_freezeProtectedSpawnTime": "1750",
       "g_allowKill": "0",
       "g_overtime": "0",
-      "pmove_BunnyHop": "0",
-      "pmove_CrouchStepJump": "0",
-      "pmove_JumpTimeDeltaMin": "50",
-      "pmove_WaterSwimScale": "0.5f",
-      "pmove_WaterWadeScale": "0.75f",
 	  "g_damage_g": "80",
 	  "sv_AltEntDir": "ftspawns",
-	  "teamsize": "8"
+	  "teamsize": "8",
+	  "g_damage_rg": "100"
     },
-    "author": "id Software",
+    "author": "mobi",
     "description": "Railgun and Gauntlet only. One shot, one kill.",
     "basegt": "ft",
     "id": "qfeift",
