@@ -31,7 +31,6 @@ intervention|qfeift
 fr3dm1|qfeift
 tscabdm2|qfeift
 cpm14|qfeift
-bal3dm3|qfeift
 theedge|qfeift
 bloodcovenant|qfeift
 awoken|qfeift
@@ -66,3 +65,9 @@ windsongkeep|qfeift
 eplus1|qfeift
 5plus|qfeift
 q3gwdm2|qfeift
+bloodister|qfeift
+drunkenmummy|qfeift
+thunderstruck|qfeift
+arenagate|qfeift
+aerowalk|qfeift
+cpm8|qfeift
