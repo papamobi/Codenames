@@ -42,11 +42,12 @@ class autorestart(minqlx.Plugin):
                 schedule.run_pending()
                 time.sleep(1)
         loop()
-
+    
+    @minqlx.delay(5)
     def handle_player_disconnect(self, *args, **kwargs):
         if len(self.players()) <= 1 and self.restart:
             minqlx.console_command("quit")
-            
+
     def server_shutdown(self):
         self.restart = True
         if len(self.players()) < 1:
