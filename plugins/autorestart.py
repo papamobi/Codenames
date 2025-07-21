@@ -21,7 +21,7 @@ except ImportError:
 
 class autorestart(minqlx.Plugin):
     def __init__(self):
-        self.set_cvar_once("qlx_autoRestartTime", "03:59") # 12:00am
+        self.set_cvar_once("qlx_autoRestartTime", "21:59") # 12:00am
 
         self.add_command("tomtec_versions", self.cmd_showversion)
 
