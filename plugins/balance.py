@@ -72,6 +72,7 @@ class balance(minqlx.Plugin):
         self.set_cvar_once("qlx_balanceUrl", "qlstats.net")
         self.set_cvar_once("qlx_balanceAuto", "1")
         self.set_cvar_once("qlx_balanceMinimumSuggestionDiff", "25")
+        self.set_cvar_once("qlx_balanceForceSwapDiff", "125")
         self.set_cvar_once("qlx_balanceApi", "elo")
 
         self.cache_cvars()
@@ -535,12 +536,13 @@ class balance(minqlx.Plugin):
                 .format(round(avg_red), round(avg_blue)))
 
         minimum_suggestion_diff = self.get_cvar("qlx_balanceMinimumSuggestionDiff", float)
+        force_swap_diff = self.get_cvar("qlx_balanceForceSwapDiff", float)
         if switch and switch[1] >= minimum_suggestion_diff:
-            channel.reply("SUGGESTION: switch ^6{}^7 with ^6{}^7. Mentioned players can type !a to agree."
-                .format(switch[0][0].clean_name, switch[0][1].clean_name))
+            message = "SUGGESTION: switch ^6{}^7 with ^6{}^7. Mentioned players can type !a to agree." if diff_rounded < force_swap_diff else "Players ^6{}^7 and ^6{}^7 will be swapped at the end of the round because teams are greatly unbalanced!"
+            channel.reply(message.format(switch[0][0].clean_name, switch[0][1].clean_name))
             if not self.suggested_pair or self.suggested_pair[0] != switch[0][0] or self.suggested_pair[1] != switch[0][1]:
                 self.suggested_pair = (switch[0][0], switch[0][1])
-                self.suggested_agree = [False, False]
+                self.suggested_agree = [True, True] if diff_rounded >= force_swap_diff else [False, False]
         else:
             i = random.randint(0, 99)
             if not i:
