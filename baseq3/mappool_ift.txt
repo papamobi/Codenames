@@ -1,3 +1,7 @@
+countermeasure|qfeift
+molten|qfeift
+retrieval|qfeift
+corruption|qfeift
 campgrounds|qfeift
 retribution|qfeift
 hellsgate|qfeift
@@ -74,4 +78,19 @@ cpm8|qfeift
 leftbehind|qfeift
 eye2eye|qfeift
 qcdm1|qfeift
-bal3dm3|qfeift
+# winterrun|qfeift
+# wintersedge|qfeift
+# wintribution|qfeift
+# winterkill|qfeift
+# winterfortress|qfeift
+# xmasasylum|qfeift
+# wintergrounds|qfeift
+# winterdungeons|qfeift
+# winterasylum|qfeift
+# lostxmas|qfeift
+# lostwinter|qfeift
+# longestxmas|qfeift
+# longestwinter|qfeift
+# wintercampgrounds|qfeift
+# xmasfortress|qfeift
+# almostxmas|qfeift

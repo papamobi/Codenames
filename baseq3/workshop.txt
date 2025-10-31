@@ -1,6 +1,7 @@
 # specify 1 workshop item id per line, ex:
 # 494372396
 # 441344649
+3352968264
 1610992852
 2650981989
 2976666729
@@ -44,3 +45,23 @@
 3296810145
 2181865088
 3030463494
+3426703726
+3554810156
+3444408828
+3596544450 ; Codenames assets v2
+1564656956 ; winterrun
+540986862 ; wintersedge
+1557855362 ; wintribution
+1571680522 ; winterkill
+2295974816 ; winterfortress
+1230180691 ; xmasasylum
+2291506453 ; wintergrounds
+2297712300 ; winterdungeons
+2300562224 ; winterasylum
+1588929344 ; lostxmas
+2954191579 ; lostwinter
+1228289981 ; longestxmas
+1590278099 ; longestwinter
+1221867521 ; wintercampgrounds
+3115955882 ; xmasfortress
+1241727160 ; almostxmas
