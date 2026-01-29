@@ -48,7 +48,7 @@
 # 3426703726
 # 3554810156
 # 3444408828
-# 3596544450 ; Codenames assets v2
+3596544450 ; Codenames assets v2
 # 1564656956 ; winterrun
 # 540986862 ; wintersedge
 # 1557855362 ; wintribution
