@@ -1,13 +1,7 @@
-countermeasure|qfeift
-molten|qfeift
-retrieval|qfeift
-corruption|qfeift
 campgrounds|qfeift
 retribution|qfeift
 hellsgate|qfeift
 overkill|qfeift
-6plus|qfeift
-7plus|qfeift
 grimdungeons|qfeift
 lostworld|qfeift
 psidm7|qfeift
@@ -26,71 +20,30 @@ focalpoint|qfeift
 blackcathedral|qfeift
 mario|qfeift
 hearth|qfeift
-heroskeep|qfeift
 asylum|qfeift
-demonkeep|qfeift
 ts_dm5|qfeift
+molten|qfeift
 prison|qfeift
-intervention|qfeift
 fr3dm1|qfeift
+wilderness|qfeift
 tscabdm2|qfeift
 cpm14|qfeift
 theedge|qfeift
 bloodcovenant|qfeift
-awoken|qfeift
-charon3dm7|qfeift
-okremix|qfeift
-mkexp|qfeift
 quarantine|qfeift
-trinity|qfeift
-asylumplus|qfeift
-firstrebirth|qfeift
-campgroundsafter|qfeift
-cannedheat|qfeift
 corrosion|qfeift
 dreadfulplace|qfeift
 ermap3|qfeift
-rustgrad|qfeift
-leviathan|qfeift
 provinggrounds|qfeift
-servitude|qfeift
-theatreofpain|qfeift
 cpm2|qfeift
-wilderness|qfeift
-battleforged|qfeift
 obs3dm5|qfeift
 forgotten|qfeift
-foolishlegacy|qfeift
 13base|qfeift
-moses_dm10|qfeift
 mrcq3t3|qfeift
-7plusplus|qfeift
-windsongkeep|qfeift
-eplus1|qfeift
 5plus|qfeift
-q3gwdm2|qfeift
-bloodister|qfeift
-drunkenmummy|qfeift
-thunderstruck|qfeift
 arenagate|qfeift
 aerowalk|qfeift
 cpm8|qfeift
-leftbehind|qfeift
 eye2eye|qfeift
 qcdm1|qfeift
-# winterrun|qfeift
-# wintersedge|qfeift
-# wintribution|qfeift
-# winterkill|qfeift
-# winterfortress|qfeift
-# xmasasylum|qfeift
-# wintergrounds|qfeift
-# winterdungeons|qfeift
-# winterasylum|qfeift
-# lostxmas|qfeift
-# lostwinter|qfeift
-# longestxmas|qfeift
-# longestwinter|qfeift
-# wintercampgrounds|qfeift
-# xmasfortress|qfeift
-# almostxmas|qfeift
+6plus|qfeift
