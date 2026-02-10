@@ -15,6 +15,7 @@ Admins list (contact through Discord for any questions. Use discord username in 
 ^4mobi^7 (f.mobile)
 ^4frog:^7 (madhypnofrog)
 ^4cyku^7 (cyku)
+^4jasmine^7 (jasminescent)
 """
 
 INFO = """
