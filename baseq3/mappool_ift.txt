@@ -45,6 +45,6 @@ mrcq3t3|qfeift
 arenagate|qfeift
 aerowalk|qfeift
 cpm8|qfeift
-eye2eye|qfeift
+eyetoeye|qfeift
 qcdm1|qfeift
 6plus|qfeift
