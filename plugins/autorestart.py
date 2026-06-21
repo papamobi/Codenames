@@ -1,11 +1,17 @@
-# autorestart.py - automatically restart server at a scheduled time when empty.
-#
-# Rewritten to remove the external `schedule` library dependency and the
-# unmanaged background thread that called into minqlx's C layer from outside
-# the main game thread (a likely source of intermittent heap corruption).
-#
-# All time checks now happen on the main game thread via the `frame` event,
-# rate-limited to once per 30 seconds.
+# Created by Thomas Jones on 16/05/2016 - thomas@tomtecsolutions.com
+# autorestart.py, a plugin for minqlx to automatically restart a server at a certain time if no-one's connected.
+# This plugin is released to everyone, for any purpose. It comes with no warranty, no guarantee it works, it's released AS IS.
+# You can modify everything, except for lines 1-4 and the !tomtec_versions code. They're there to indicate I whacked this together originally. Please make it better :D
+
+"""
+    Times are specified in 24-hour time syntax, 13:00 for 1:00pm, 23:00 for 11:00pm, 02:00 for 2:00am etc.
+
+    v2.0: Removed the external `schedule` library dependency and the unmanaged
+    background thread that called into minqlx's C layer from outside the main
+    game thread (a likely source of intermittent heap corruption). All time
+    checks now happen on the main game thread via the `frame` event,
+    rate-limited to once per 30 seconds.
+"""
 
 import minqlx
 import time
@@ -81,5 +87,5 @@ class autorestart(minqlx.Plugin):
 
     def cmd_showversion(self, player, msg, channel):
         channel.reply(
-            "^4autorestart.py^7 - version {}.".format(self.plugin_version)
+            "^4autorestart.py^7 - version {}, created by Thomas Jones on 16/05/2016, modified by mobi.".format(self.plugin_version)
         )
