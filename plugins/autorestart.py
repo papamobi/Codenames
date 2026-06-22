@@ -11,6 +11,15 @@
     game thread (a likely source of intermittent heap corruption). All time
     checks now happen on the main game thread via the `frame` event,
     rate-limited to once per 30 seconds.
+
+    v2.1: Fixed a bug where the server could quit while one player was still
+    connected (`<= 1` instead of `== 0` in handle_player_disconnect). Also
+    added a player-count recheck inside handle_frame for the case where
+    self.restart is already True and no further player_disconnect event ever
+    fires (e.g. the server was already empty when the target time hit, or the
+    last player sits connected without disconnecting) -- this now self-heals
+    on the existing 30s throttle instead of waiting indefinitely on a
+    disconnect event.
 """
 
 import minqlx
@@ -28,7 +37,7 @@ class autorestart(minqlx.Plugin):
         self.add_hook("player_disconnect", self.handle_player_disconnect)
         self.add_hook("frame", self.handle_frame)
 
-        self.plugin_version = "2.0"
+        self.plugin_version = "2.1"
         self.restart = False
         self.last_check_monotonic = 0.0
 
@@ -62,7 +71,12 @@ class autorestart(minqlx.Plugin):
         self.last_check_monotonic = now_mono
 
         if self.restart:
-            return  # already flagged, nothing more to do here
+            # Already flagged for restart. No further player_disconnect event
+            # may ever fire (server was already empty, or the last player just
+            # sits connected) -- so recheck here as a safety net.
+            if len(self.players()) == 0:
+                minqlx.console_command("quit")
+            return
 
         target = self._parse_target()
         if target is None:
@@ -77,12 +91,12 @@ class autorestart(minqlx.Plugin):
         if now_dt >= target_today and self.last_triggered_date != today:
             self.last_triggered_date = today
             self.restart = True
-            if len(self.players()) < 1:
+            if len(self.players()) == 0:
                 minqlx.console_command("quit")
 
     @minqlx.delay(5)
     def handle_player_disconnect(self, *args, **kwargs):
-        if self.restart and len(self.players()) <= 1:
+        if self.restart and len(self.players()) == 0:
             minqlx.console_command("quit")
 
     def cmd_showversion(self, player, msg, channel):
