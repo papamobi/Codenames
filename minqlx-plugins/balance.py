@@ -16,6 +16,47 @@
 # You should have received a copy of the GNU General Public License
 # along with minqlx. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Configuration cvars (set these in server.cfg):
+
+    qlx_balanceUseLocal            (default "1")
+        "1" = use cached local ratings first and only fetch from the API
+        when missing; "0" = always go to the API. Caching reduces load on
+        the rating server and is fine for typical use.
+
+    qlx_balanceUrl                 (default "qlstats.net")
+        The hostname of the rating-server API. Used together with
+        qlx_balanceApi to build the URL the plugin fetches ratings from.
+
+    qlx_balanceApi                 (default "elo")
+        The rating endpoint to use on the rating server. Common values:
+        "elo", "elo_b" (B-rating variant). Combined with qlx_balanceUrl
+        as http://<url>/<api>/ for HTTP fetches.
+
+    qlx_balanceMinimumSuggestionDiff   (default "25")
+        Minimum team-ELO difference below which the plugin will not
+        suggest a swap at all. Below this threshold, !teams just reports
+        the ratings without a swap recommendation. Acts as a noise floor
+        so trivial imbalances don't generate suggestions.
+
+    qlx_balanceForceSwapDiff       (no default -- opt-in)
+        ELO difference at or above which a swap is performed
+        automatically, without players needing to !agree or call /callvote
+        do. UNSET / empty / "0" = feature disabled (default behavior:
+        regular suggestion flow). Set this in server.cfg to e.g. "125" to
+        auto-swap whenever teams differ by 125+ ELO.
+
+        On round-based gametypes (AD, CA, FT) the auto-swap queues for
+        the next round_end so it happens between rounds. On continuous
+        gametypes (TDM, CTF, DOM) it executes immediately, since those
+        gametypes have no mid-game round boundary to wait for.
+
+    qlx_balanceForceSwapDiff is intentionally not registered with a
+    default value so a server admin who hasn't deliberately enabled the
+    feature never sees automatic swaps. Add the line to server.cfg to
+    opt in.
+"""
+
 import minqlx
 import requests
 import itertools
@@ -32,6 +73,32 @@ TEAMS_CALL_COOLDOWN = 5 # can't call !teams more frequently than once in 5 secon
 SUPPORTED_GAMETYPES = ("ad", "ca", "ctf", "dom", "ft", "tdm")
 # Externally supported game types. Used by !getrating for game types the API works with.
 EXT_SUPPORTED_GAMETYPES = ("ad", "ca", "ctf", "dom", "ft", "tdm", "duel", "ffa")
+# Round-based gametypes have a natural "next round" boundary that switches can
+# be deferred to. Continuous gametypes (ctf, dom, tdm) do not -- their only
+# "round end" is the end of the game itself, so deferring a player switch on
+# those gametypes effectively means "wait until the game finishes." cmd_agree
+# uses this to decide whether to defer or execute immediately.
+ROUND_BASED_GAMETYPES = ("ad", "ca", "ft")
+
+# Built-in QL factories that need force-reset of qlx_balanceApi to "elo".
+#
+# Why this exists: factory cvars persist across factory switches. Built-in
+# id Software factories cannot be edited and never set qlx_balanceApi
+# themselves. So if a previous custom factory set the cvar to "elo_b" and
+# the engine then switches to one of these built-ins, the cvar stays as
+# "elo_b" and balance.py would fetch ratings from the wrong API.
+#
+# handle_new_game force-resets qlx_balanceApi based on the current built-in
+# factory. Custom factories are left untouched -- their own .factories file
+# sets qlx_balanceApi explicitly and the existing cache_cvars() flow handles
+# them correctly.
+DEFAULT_ELO_FACTORIES = frozenset((
+    "ad", "ffa", "ca", "ft", "tdm", "duel", "ctf",
+))
+# Built-in factories that use the B-rating API (Instagib variants).
+DEFAULT_ELO_B_FACTORIES = frozenset((
+    "ictf", "ift", "iffa",
+))
 
 
 class balance(minqlx.Plugin):
@@ -65,14 +132,21 @@ class balance(minqlx.Plugin):
         self.suggested_pair = None
         self.suggested_agree = [False, False]
         self.in_countdown = False
-        # pray this doesn't break in multithreaded setups...
+        # Tracked across threads via self.teams_lock at the read/write site
+        # in cmd_teams. Initialized to 0 so the first call always passes the
+        # cooldown check (any current timestamp - 0 >> TEAMS_CALL_COOLDOWN).
         self.last_teams_call_timestamp = 0
 
         self.set_cvar_once("qlx_balanceUseLocal", "1")
         self.set_cvar_once("qlx_balanceUrl", "qlstats.net")
         self.set_cvar_once("qlx_balanceAuto", "1")
         self.set_cvar_once("qlx_balanceMinimumSuggestionDiff", "25")
-        self.set_cvar_once("qlx_balanceForceSwapDiff", "125")
+        # qlx_balanceForceSwapDiff is intentionally NOT registered with a
+        # default here. The auto-swap feature is opt-in: leave this cvar
+        # unset in server.cfg and no auto-swap will ever trigger (the
+        # comparison site treats missing/None/<=0 identically as disabled).
+        # To enable, set qlx_balanceForceSwapDiff "<elo_diff>" in server.cfg
+        # (e.g. "125" to auto-swap when teams differ by >= 125 elo).
         self.set_cvar_once("qlx_balanceApi", "elo")
 
         self.cache_cvars()
@@ -83,18 +157,11 @@ class balance(minqlx.Plugin):
         self.api_url = "http://{}/{}/".format(self.get_cvar("qlx_balanceUrl"), self.get_cvar("qlx_balanceApi"))
 
     def handle_round_countdown(self, *args, **kwargs):
-        """ 
-        doesn't need swapping during round countdown because the server doesn't have countdowns enabled;
-        instead it's done in handle_round_start (but if countdowns are enabled swaps should be done here)
-        if all(self.suggested_agree):
-            # If we don't delay the switch a bit, the round countdown sound and
-            # text disappears for some weird reason.
-            @minqlx.next_frame
-            def f():
-                self.execute_suggestion()
-            f()
-        """
-        
+        # No swap is done here -- this server doesn't have round countdowns
+        # enabled, so the swap happens in handle_round_end instead. If
+        # countdowns are ever re-enabled, this is where the swap should go
+        # (using @minqlx.next_frame to avoid clobbering the countdown sound
+        # and text, per an old comment about that behavior).
         self.in_countdown = True
 
     def handle_round_start(self, *args, **kwargs):
@@ -108,6 +175,26 @@ class balance(minqlx.Plugin):
             # don't wait because we don't have the countdown
             self.execute_suggestion()
 
+    def _near_endgame(self):
+        """True if either team is within 2 rounds of winning the match.
+        Used to suppress force-swap decisions on round-based gametypes --
+        if the match is close to ending, moving a player between teams
+        disrupts endgame play. The 2-round window covers both:
+          - The current round being potentially last (roundlimit-1 already)
+          - The round after this one becoming potentially last
+        Only meaningful for gametypes that use roundlimit (AD, CA, FT);
+        returns False when roundlimit isn't set or is 0 (e.g. timelimit-
+        only games)."""
+        if self.game is None:
+            return False
+        try:
+            roundlimit = self.game.roundlimit
+            if roundlimit <= 0:
+                return False
+            return max(self.game.red_score, self.game.blue_score) >= roundlimit - 2
+        except (AttributeError, TypeError):
+            return False
+
     def handle_vote_ended(self, votes, vote, args, passed):
         if passed == True and vote == "shuffle" and self.get_cvar("qlx_balanceAuto", bool):
             gt = self.game.type_short
@@ -120,7 +207,7 @@ class balance(minqlx.Plugin):
                 if len(players["red"] + players["blue"]) % 2 != 0:
                     self.msg("Teams were ^6NOT^7 balanced due to the total number of players being an odd number.")
                     return
-                
+
                 players = dict([(p.steam_id, gt) for p in players["red"] + players["blue"]])
                 self.add_request(players, self.callback_balance, minqlx.CHAT_CHANNEL)
             f()
@@ -133,6 +220,19 @@ class balance(minqlx.Plugin):
         self.clean_player_data(player)
 
     def handle_new_game(self):
+        # Built-in QL factories can't be edited and never set qlx_balanceApi.
+        # If a previous custom factory set it (e.g. to "elo_b") and the engine
+        # then switches to a built-in, the cvar would persist and balance.py
+        # would fetch from the wrong API. Force-reset based on the current
+        # built-in factory's expected rating type. Custom factories are left
+        # untouched -- their .factories file sets qlx_balanceApi explicitly
+        # and the existing cache_cvars() flow handles them correctly.
+        # Must run BEFORE cache_cvars() so api_url reflects the corrected value.
+        if self.game.factory in DEFAULT_ELO_FACTORIES:
+            self.set_cvar("qlx_balanceApi", "elo")
+        elif self.game.factory in DEFAULT_ELO_B_FACTORIES:
+            self.set_cvar("qlx_balanceApi", "elo_b")
+
         self.cache_cvars()
         gt = self.game.type_short
 
@@ -206,7 +306,7 @@ class balance(minqlx.Plugin):
             last_status = res.status_code
             if res.status_code != requests.codes.ok:
                 continue
-            
+
             js = res.json()
             if "players" not in js:
                 last_status = -1
@@ -221,14 +321,14 @@ class balance(minqlx.Plugin):
                 with self.ratings_lock:
                     if sid not in self.ratings:
                         self.ratings[sid] = {}
-                    
+
                     for gt in p:
                         p[gt]["time"] = t
                         p[gt]["local"] = False
                         self.ratings[sid][gt] = p[gt]
                         if self.ratings[sid][gt]["elo"] == 0 and self.ratings[sid][gt]["games"] == 0:
                             self.ratings[sid][gt]["elo"] = DEFAULT_RATING
-                        
+
                         if sid in players and gt == players[sid]:
                             # The API gave us the game type we wanted, so we remove it.
                             del players[sid]
@@ -344,13 +444,13 @@ class balance(minqlx.Plugin):
             name = player.name
         else:
             name = sid
-        
+
         channel.reply("{} has a rating of ^6{}^7 in {}.".format(name, self.ratings[sid][gametype]["elo"], gametype.upper()))
 
     def cmd_setrating(self, player, msg, channel):
         if len(msg) < 3:
             return minqlx.RET_USAGE
-        
+
         try:
             sid = int(msg[1])
             target_player = None
@@ -363,7 +463,7 @@ class balance(minqlx.Plugin):
         except minqlx.NonexistentPlayerError:
             player.tell("Invalid client ID. Use either a client ID or a SteamID64.")
             return minqlx.RET_STOP_ALL
-        
+
         try:
             rating = int(msg[2])
         except ValueError:
@@ -374,7 +474,7 @@ class balance(minqlx.Plugin):
             name = target_player.name
         else:
             name = sid
-        
+
         gt = self.game.type_short
         self.db[RATING_KEY.format(sid, gt)] = rating
 
@@ -390,7 +490,7 @@ class balance(minqlx.Plugin):
     def cmd_remrating(self, player, msg, channel):
         if len(msg) < 2:
             return minqlx.RET_USAGE
-        
+
         try:
             sid = int(msg[1])
             target_player = None
@@ -403,12 +503,12 @@ class balance(minqlx.Plugin):
         except minqlx.NonexistentPlayerError:
             player.tell("Invalid client ID. Use either a client ID or a SteamID64.")
             return minqlx.RET_STOP_ALL
-        
+
         if target_player:
             name = target_player.name
         else:
             name = sid
-        
+
         gt = self.game.type_short
         del self.db[RATING_KEY.format(sid, gt)]
 
@@ -429,7 +529,7 @@ class balance(minqlx.Plugin):
         if len(teams["red"] + teams["blue"]) % 2 != 0:
             player.tell("The total number of players should be an even number.")
             return minqlx.RET_STOP_ALL
-        
+
         players = dict([(p.steam_id, gt) for p in teams["red"] + teams["blue"]])
         self.add_request(players, self.callback_balance, minqlx.CHAT_CHANNEL)
 
@@ -493,15 +593,21 @@ class balance(minqlx.Plugin):
         if gt not in SUPPORTED_GAMETYPES:
             player.tell("This game mode is not supported by the balance plugin.")
             return minqlx.RET_STOP_ALL
-        
+
         teams = self.teams()
         if len(teams["red"]) != len(teams["blue"]):
             player.tell("Both teams should have the same number of players.")
             return minqlx.RET_STOP_ALL
-        
+
         teams = dict([(p.steam_id, gt) for p in teams["red"] + teams["blue"]])
         self.add_request(teams, self.callback_teams, channel)
 
+    # Runs on the main thread. callback_teams reads self.teams(), self.game
+    # state, and issues channel.reply() / execute_suggestion() -- all of
+    # which touch engine state and need to run on the game tick, not on the
+    # fetch_ratings @minqlx.thread worker that would otherwise invoke this
+    # callback directly.
+    @minqlx.next_frame
     def callback_teams(self, players, channel):
         # prevent teams call from being called too fast; this also fixes the double-call when people join
         with self.teams_lock:
@@ -538,11 +644,49 @@ class balance(minqlx.Plugin):
         minimum_suggestion_diff = self.get_cvar("qlx_balanceMinimumSuggestionDiff", float)
         force_swap_diff = self.get_cvar("qlx_balanceForceSwapDiff", float)
         if switch and switch[1] >= minimum_suggestion_diff:
-            message = "SUGGESTION: switch ^6{}^7 with ^6{}^7. Mentioned players can type !a to agree." if diff_rounded < force_swap_diff else "Players ^6{}^7 and ^6{}^7 will be swapped at the end of the round because teams are greatly unbalanced!"
+            gt = self.game.type_short
+            # Auto-swap is disabled (never triggers) when force_swap_diff is
+            # missing, empty, zero, or negative. All three of these give the
+            # same behavior:
+            #   - cvar absent from server.cfg entirely
+            #   - cvar set to "" (empty string)
+            #   - cvar set to "0"
+            # Without explicit handling, an empty/missing cvar makes
+            # get_cvar(..., float) return None and `None > 0` would raise a
+            # TypeError in Python 3.
+            force_swap = (force_swap_diff is not None
+                          and force_swap_diff > 0
+                          and diff_rounded >= force_swap_diff)
+            # Don't force-swap when the match is close to ending. On
+            # round-based gametypes, if either team is within 2 rounds of
+            # winning, forcibly moving a player between teams disrupts the
+            # endgame -- e.g. a high-scoring player gets shifted to the
+            # other side just as the match is about to end. The regular
+            # !agree suggestion path still runs below, so players can opt
+            # in if both sides genuinely want the swap.
+            if force_swap and gt in ROUND_BASED_GAMETYPES and self._near_endgame():
+                force_swap = False
+            # On continuous gametypes (TDM, CTF, DOM), there is no
+            # meaningful "end of the round" mid-game -- the queued swap
+            # would only execute when the entire game ends. So when a
+            # force-swap is triggered on a continuous gametype, execute it
+            # immediately and say so. On round-based gametypes (AD, CA, FT),
+            # keep the existing "queue for end of round" behavior.
+            if force_swap and gt not in ROUND_BASED_GAMETYPES:
+                message = "Players ^6{}^7 and ^6{}^7 will be swapped now because teams are greatly unbalanced!"
+            elif force_swap:
+                message = "Players ^6{}^7 and ^6{}^7 will be swapped at the end of the round because teams are greatly unbalanced!"
+            else:
+                message = "SUGGESTION: switch ^6{}^7 with ^6{}^7. Mentioned players can type !a to agree."
             channel.reply(message.format(switch[0][0].clean_name, switch[0][1].clean_name))
             if not self.suggested_pair or self.suggested_pair[0] != switch[0][0] or self.suggested_pair[1] != switch[0][1]:
                 self.suggested_pair = (switch[0][0], switch[0][1])
-                self.suggested_agree = [True, True] if diff_rounded >= force_swap_diff else [False, False]
+                self.suggested_agree = [True, True] if force_swap else [False, False]
+                # If we just decided to force-swap on a continuous gametype,
+                # don't wait for handle_round_end -- it won't fire until the
+                # whole game ends. Execute now.
+                if force_swap and gt not in ROUND_BASED_GAMETYPES:
+                    self.execute_suggestion()
         else:
             i = random.randint(0, 99)
             if not i:
@@ -562,15 +706,25 @@ class balance(minqlx.Plugin):
         """After the bot suggests a switch, players in question can use this to agree to the switch."""
         if self.suggested_pair and not all(self.suggested_agree):
             p1, p2 = self.suggested_pair
-            
+
             if p1 == player:
                 self.suggested_agree[0] = True
             elif p2 == player:
                 self.suggested_agree[1] = True
 
             if all(self.suggested_agree):
-                # If the game's in progress and we're not in the round countdown, wait for next round.
-                if self.game.state == "in_progress" and not self.in_countdown:
+                # On round-based gametypes (AD, CA, FT), defer to the next
+                # round start if the game's in progress -- the existing
+                # handle_round_end hook will catch and execute it.
+                # On continuous gametypes (TDM, CTF, DOM), there's no
+                # meaningful "next round" boundary mid-game -- the only
+                # round_end event fires when the whole game ends, which
+                # would leave players waiting up to a full timelimit/
+                # fraglimit before the switch happens. Execute immediately
+                # in that case.
+                gt = self.game.type_short
+                if self.game.state == "in_progress" and not self.in_countdown \
+                        and gt in ROUND_BASED_GAMETYPES:
                     self.msg("Both players agreed. The switch will be executed at the start of next round.")
                     return
 
@@ -582,7 +736,7 @@ class balance(minqlx.Plugin):
         if gt not in EXT_SUPPORTED_GAMETYPES:
             player.tell("This game mode is not supported by the balance plugin.")
             return minqlx.RET_STOP_ALL
-        
+
         players = dict([(p.steam_id, gt) for p in self.players()])
         self.add_request(players, self.callback_ratings, channel)
 
@@ -660,10 +814,10 @@ class balance(minqlx.Plugin):
             p2.update()
         except minqlx.NonexistentPlayerError:
             return
-        
+
         if p1.team != "spectator" and p2.team != "spectator":
             self.switch(self.suggested_pair[0], self.suggested_pair[1])
-        
+
         self.suggested_pair = None
         self.suggested_agree = [False, False]
 
@@ -682,7 +836,7 @@ class balance(minqlx.Plugin):
             if attempt > 3:
                 raise Exception("couldn't fetch rating for player {}".format(player.steam_id))
 
-            minqlx.console_command("echo Couldn't fetch rating for player {} when adding to teams".format(player.steam_id))
+            minqlx.console_print("Couldn't fetch rating for player {} when adding to teams".format(player.steam_id))
             self.add_request({ player.steam_id: self.game.type_short }, self.callback_fetch_player_elo, minqlx.CHAT_CHANNEL)
             time.sleep(0.1)
             return self.get_player_elo(player, attempt + 1)
@@ -700,7 +854,7 @@ class balance(minqlx.Plugin):
             if attempt > 3:
                 raise Exception("couldn't calculate the average rating for teams")
 
-            minqlx.console_command("echo Couldn't calculate the average rating for teams!")
+            minqlx.console_print("Couldn't calculate the average rating for teams!")
             teams = self.teams()
             current = teams["red"] + teams["blue"]
             d = dict([(p.steam_id, gt) for p in current])

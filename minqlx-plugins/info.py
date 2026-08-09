@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Codenames, MadHypnofrog
+# Copyright (c) 2024 Codenames, MadHypnofrog, mobi
 #
 # https://github.com/papamobi/Codenames/
 #
@@ -31,11 +31,12 @@ Frequently used commands:
 ^6!afk^7 and ^6!here^7 - set your status while in spec
 ^6!q^7 - display the queue
 ^6!sounds^7 - enable or disable custom sounds
-^6!listsounds <#soundpack>^7 - display a list of custom sounds
+^6!ls <#soundpack>^7 or ^6!ls all^7- display a list of custom sounds
 ^6!pummel^7 and ^6!airpummel^7 - display pummel/air pummel stats for you and everyone on the server
 ^6!clan <tag>^7 - set your clan tag
 ^6!name <name>^7 - set your nickname (you can also override your steam name!)
 ^6!seen <STEAMID64>^7 - Check when the user was last seen on the server
+^6!alias <id> - Check if player used any other names/STEAMID on the server
 ^6!flags^7 - List of fun custom flags. Use with /country <flag code> 
 """
 
