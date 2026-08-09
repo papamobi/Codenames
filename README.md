@@ -1,32 +1,28 @@
 # Codenames
-=======
+
 ![codenames](https://github.com/papamobi/Codenames/assets/78706032/86857ba6-cc0c-4fee-9741-1a48b61c1b12)
 
+Configs and plugins for **Codenames Instagib Freeze**.
 
+## Plugins
 
+We use modified versions of the following:
 
-Configs and plugins for Codenames Instagib Freeze
+- `balance.py`
+- `mybalance.py`
+- `afk.py`
+- `queue.py`
+- `essentials.py`
 
-We are using modified versions of the following plugins:
-balance.py,
-mybalance.py,
-afk.py,
-queue.py,
-essentials.py
+While you may use these plugins elsewhere, the modifications were made specifically for public iFT. Testing is recommended before use.
 
-While you may use these plugins for other game modes, the modifications were made specifically for public IFT, so some functions are not guaranteed to work. Testing is recommended before use.
+## Server info
 
-QLSTATS page: https://qlstats.net/server/5911
+- **QLSTATS:** https://qlstats.net/server/5911
+- **GameTracker:** https://www.gametracker.com/server_info/79.132.130.101:27960/
+- **Connect (browser):** https://tinyurl.com/codenames-freeze
+- **Connect (console):** `/connect 79.132.130.101:27960`
 
-Gametracker: https://www.gametracker.com/server_info/79.132.130.101:27960/
+## Admin team
 
-Connect to the server using this HTML link: https://tinyurl.com/codenames-freeze
-
-Direct console connect:
-/connect 79.132.130.101:27960
-
-Admin team:
-cyku,
-frog,
-coeurl,
-mobi
+cyku, frog, coeurl, mobi, jasmine
