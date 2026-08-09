@@ -1,4 +1,4 @@
-# Tr1ckHouse minqlx plugins — notes
+# Codenames minqlx plugins — notes
 
 ## Threading rule
 
