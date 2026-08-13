@@ -16,4 +16,4 @@ For delayed or periodic execution, use minqlx's own mechanisms instead:
 
 ## Credits
 
-[tjone720](https://github.com/tjone720) — thanks for finding and fixing game crashes issues.
+[tjone270](https://github.com/tjone270) — thanks for finding and fixing game crashes issues.
