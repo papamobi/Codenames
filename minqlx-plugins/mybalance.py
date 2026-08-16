@@ -983,7 +983,9 @@ class mybalance(iouonegirlPlugin):
         # player after a mid-scoreboard disconnect. Mirrors the pattern
         # already used by handle_team_switch, evaluate_team_balance, and
         # the freeze-then-spec path.
-        if not self.game_active:
+        # Explicitly check for countdown here: the countdown handler has a delay and does not set game_active itself
+        # (only gets set after the match starts) but we need to be able to balance teams right before the match starts.
+        if not self.game_active and self.game.state != "countdown":
             state["done"] = True
             return
 
